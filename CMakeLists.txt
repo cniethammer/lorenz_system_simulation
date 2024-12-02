@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.24)
 # Run the following command to configure and build this project in a subfolder 'build'
 #   cmake -B build -S . && cmake --build build/
 
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.29)
+    cmake_policy(SET CMP0156 NEW)
+endif()
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.31)
+    cmake_policy(SET CMP0179 NEW)
+endif()
+
 
 project(chub_block_solver)
 
