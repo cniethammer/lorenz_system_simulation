@@ -17,6 +17,7 @@ find_package(MPI REQUIRED) # Look for an MPI library
 
 # build solver from source files and link to libraries
 add_executable(solver)
+target_compile_features(solver PRIVATE cxx_std_17)
 target_sources(solver
     PRIVATE
         main.cpp
