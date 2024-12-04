@@ -14,6 +14,22 @@ project(chub_block_solver)
 
 
 find_package(MPI REQUIRED) # Look for an MPI library
+find_package(yaml-cpp REQUIRED) # look for yaml-cpp
+if(NOT ${yaml-cpp_FOUND}) #  install yaml-cpp from source if not found on the system
+    include(FetchContent)
+    FetchContent_Declare(
+    yaml-cpp
+    GIT_REPOSITORY https://github.com/jbeder/yaml-cpp.git
+    GIT_TAG 0.8.0 # Can be a tag (yaml-cpp-x.x.x), a commit hash, or a branch name (master)
+    )
+    FetchContent_MakeAvailable(yaml-cpp)
+endif()
+
+set(CMAKE_CXX_CLANG_TIDY
+  clang-tidy;
+  -format-style='file';
+  -header-filter=${CMAKE_CURRENT_SOURCE_DIR};
+)
 
 # build solver from source files and link to libraries
 add_executable(solver)
@@ -28,6 +44,7 @@ target_sources(solver
 target_link_libraries(solver
     PUBLIC
         MPI::MPI_CXX
+        yaml-cpp::yaml-cpp
     )
 target_compile_options(solver PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/W4>

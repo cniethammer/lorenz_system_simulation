@@ -11,6 +11,7 @@
 #include <numeric>
 #include <sstream>
 
+#include <yaml-cpp/yaml.h>
 
 class InvalidParameterError : public std::runtime_error {
 public:
@@ -36,22 +37,6 @@ public:
             if (i < arr.size() - 1) out << ",";
         }
         out << "]";
-    }
-};
-
-class YAMLWriter {
-public:
-    static void writeArray(std::ostream& out, const std::vector<double>& arr, int indent = 0) {
-        for (const auto& val : arr) {
-            out << std::string(indent, ' ') << "- " << val << "\n";
-        }
-    }
-
-    static void write2DArray(std::ostream& out, const std::vector<std::vector<double>>& arr, int indent = 0) {
-        for (const auto& row : arr) {
-            out << std::string(indent, ' ') << "-\n";
-            writeArray(out, row, indent + 2);
-        }
     }
 };
 
@@ -113,53 +98,23 @@ static Config fromFile(const std::string& filename) {
     }
 
     static Config fromYAML(const std::string& filename) {
-    Config cfg;
-    std::ifstream file(filename);
-    std::string line;
-    bool in_y0_section = false;
-    
-    while (std::getline(file, line)) {
-        line.erase(0, line.find_first_not_of(" \t"));
-        line.erase(line.find_last_not_of(" \t") + 1);
+        Config cfg;
+        YAML::Node config = YAML::LoadFile(filename);
+
+        cfg.k = config["k"].as<size_t>();
+        cfg.x0 = config["x0"].as<double>();
+        cfg.xend = config["xend"].as<double>();
+        cfg.tol = config["tol"].as<double>();
+
+        cfg.y0.clear();
+        cfg.y0 = config["y0"].as<std::vector<double>>();;
         
-        if (line.empty()) continue;
-        
-        if (line.find("k:") == 0) {
-            cfg.k = std::stoul(line.substr(line.find(":") + 1));
+        if (cfg.y0.empty()) {
+            throw std::runtime_error("No initial conditions (y0) found in YAML file");
         }
-        else if (line.find("x0:") == 0) {
-            cfg.x0 = std::stod(line.substr(line.find(":") + 1));
-        }
-        else if (line.find("xend:") == 0) {
-            cfg.xend = std::stod(line.substr(line.find(":") + 1));
-        }
-        else if (line.find("tol:") == 0) {
-            cfg.tol = std::stod(line.substr(line.find(":") + 1));
-        }
-        else if (line.find("y0:") == 0) {
-            in_y0_section = true;
-            cfg.y0.clear();
-            continue;
-        }
-        else if (in_y0_section && line[0] == '-') {
-            size_t valueStart = line.find_first_not_of(" \t", 1);
-            if (valueStart != std::string::npos) {
-                std::string valueStr = line.substr(valueStart);
-                try {
-                    cfg.y0.push_back(std::stod(valueStr));
-                } catch (const std::exception& e) {
-                    throw std::runtime_error("Invalid number in y0 array: " + valueStr);
-                }
-            }
-        }
+
+        return cfg;
     }
-    
-    if (cfg.y0.empty()) {
-        throw std::runtime_error("No initial conditions (y0) found in YAML file");
-    }
-    
-    return cfg;
-}
 
     static Config fromCSV(const std::string& filename) {
         Config cfg;
@@ -524,11 +479,13 @@ void writeJSON(const std::string& filename, const std::vector<std::vector<double
 }
 
 void writeYAML(const std::string& filename, const std::vector<std::vector<double>>& solution, double x0, double dx) {
+    YAML::Node node ;
+    node["x0"] = x0;
+    node["dx"] = dx;
+    node["solution"] = solution;
+
     std::ofstream file(filename);
-    file << "x0: " << x0 << "\n";
-    file << "dx: " << dx << "\n";
-    file << "solution:\n";
-    YAMLWriter::write2DArray(file, solution, 2);
+    file << node;
 }
 
 void writeCSV(const std::string& filename, const std::vector<std::vector<double>>& solution, double x0, double dx) {
