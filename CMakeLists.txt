@@ -14,7 +14,7 @@ project(chub_block_solver)
 
 
 find_package(MPI REQUIRED) # Look for an MPI library
-find_package(yaml-cpp REQUIRED) # look for yaml-cpp
+find_package(yaml-cpp) # look for yaml-cpp
 if(NOT ${yaml-cpp_FOUND}) #  install yaml-cpp from source if not found on the system
     include(FetchContent)
     FetchContent_Declare(
