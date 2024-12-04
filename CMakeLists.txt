@@ -25,12 +25,6 @@ if(NOT ${yaml-cpp_FOUND}) #  install yaml-cpp from source if not found on the sy
     FetchContent_MakeAvailable(yaml-cpp)
 endif()
 
-set(CMAKE_CXX_CLANG_TIDY
-  clang-tidy;
-  -format-style='file';
-  -header-filter=${CMAKE_CURRENT_SOURCE_DIR};
-)
-
 # build solver from source files and link to libraries
 add_executable(solver)
 target_compile_features(solver PRIVATE cxx_std_17)
